@@ -144,7 +144,6 @@ int main()
 	// Initialize the scene
     sceneInit();
 	
-	printf("Hello 3DS World!");
 
 	// Main loop
 	while (aptMainLoop()) {
