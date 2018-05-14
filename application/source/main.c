@@ -1,6 +1,7 @@
 #include <3ds.h>
 #include <citro3d.h>
 #include <string.h>
+#include <stdio.h>
 #include "vshader_shbin.h"
 
 #define CLEAR_COLOR 0x68B0D8FF
@@ -10,7 +11,7 @@
 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
-
+/*
 typedef struct { float x, y, z; } vertex;
 
 static const vertex vertex_list[] =
@@ -19,6 +20,16 @@ static const vertex vertex_list[] =
 { 200.0f, 200.0f, 0.5f },
 { 100.0f, 40.0f, 0.5f },
 { 300.0f, 40.0f, 0.5f },
+
+};
+*/
+typedef struct { float position[3]; float color[4]; } vertex;
+static const vertex vertex_list[] =
+{
+
+{ {200.0f, 200.0f, 0.5f}, {1.0f, 0.0f, 0.0f, 1.0f} },
+{ {100.0f, 40.0f, 0.5f}, {0.0f, 1.0f, 0.0f, 1.0f} },
+{ {300.0f, 40.0f, 0.5f}, {0.0f, 0.0f, 1.0f, 1.0f} },
 
 };
 
@@ -44,10 +55,19 @@ static void sceneInit(void)
 vshader_dvlb = DVLB_ParseFile((u32*)vshader_shbin, vshader_shbin_size);
 shaderProgramInit(&program);
 shaderProgramSetVsh(&program, &vshader_dvlb->DVLE[0]);
+
+// Load the geoshader
+shaderProgramSetGsh(&program, &vshader_dvlb->DVLE[1], 6);
+
+
 C3D_BindProgram(&program);
 
-// Get the location of the uniforms
-uLoc_projection = shaderInstanceGetUniformLocation(program.vertexShader, "projection");
+// Get the location of the uniforms (vertex)
+//uLoc_projection = shaderInstanceGetUniformLocation(program.vertexShader, "projection");
+
+// Geo
+uLoc_projection = shaderInstanceGetUniformLocation(program.geometryShader, "projection");
+
 
 // Configure attributes for use with the vertex shader
 C3D_AttrInfo* attrInfo = C3D_GetAttrInfo();
@@ -89,10 +109,12 @@ C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
 static void sceneRender(void) 
 {
 
-// Update the uniforms
-C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
-// Draw the VBO
-C3D_DrawArrays(GPU_TRIANGLES, 0, vertex_list_count);
+// Update the uniforms (vertex)
+//C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
+C3D_FVUnifMtx4x4(GPU_GEOMETRY_SHADER, uLoc_projection, &projection);
+// Draw the VBO (vertex)
+//C3D_DrawArrays(GPU_TRIANGLES, 0, vertex_list_count);
+C3D_DrawArrays(GPU_GEOMETRY_PRIM, 0, vertex_list_count);
 }
 
 static void sceneExit(void)
@@ -108,8 +130,6 @@ DVLB_Free(vshader_dvlb);
 int main()
  {
 	gfxInitDefault();
-	//PrintConsole output;
-	//consoleSelect(consoleInit(GFX_BOTTOM, &output));
 	
 	//Init citro3d
     C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
@@ -121,20 +141,10 @@ int main()
 	C3D_RenderTargetSetClear(target, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
 	C3D_RenderTargetSetOutput(target, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 	
-	
-    
-   // uint32_t transferFlags = GX_TRANSFER_FLIP_VERT(false)|
-   // GX_TRANSFER_OUT_TILED(false)|
-   // GX_TRANSFER_RAW_COPY(false)|
-   // GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8)|
-   // GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGBA8)|
-   // GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_XY);
-   // C3D_RenderTargetSetOutput(target, GFX_TOP, GFX_LEFT, transferFlags);
-	
 	// Initialize the scene
     sceneInit();
 	
-	//printf("Hello 3DS World!");
+	printf("Hello 3DS World!");
 
 	// Main loop
 	while (aptMainLoop()) {
@@ -146,12 +156,7 @@ int main()
 		if (kDown & KEY_START)
 			break; // break in order to return to hbmenu
 
-		// Flush and swap framebuffers
-		//gfxFlushBuffers();
-		//gfxSwapBuffers();
-		//gspWaitForVBlank();
 	C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
-		//C3D_RenderTargetClear(target, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
 		C3D_FrameDrawOn(target);
 		sceneRender();
 	C3D_FrameEnd(0);
