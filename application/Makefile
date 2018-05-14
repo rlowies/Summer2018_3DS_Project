@@ -179,9 +179,9 @@ define shader-as
 	$(eval CURBIN := $*.shbin)
 	$(eval DEPSFILE := $(DEPSDIR)/$*.shbin.d)
 	echo "$(CURBIN).o: $< $1" > $(DEPSFILE)
-	echo "extern const uint8_t" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"_end[];" > `(echo $(CURBIN) | tr . _)`.h
-	echo "extern const uint8_t" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"[];" >> `(echo $(CURBIN) | tr . _)`.h
-	echo "extern const uint32_t" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`_size";" >> `(echo $(CURBIN) | tr . _)`.h
+	echo "extern const u8" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"_end[];" > `(echo $(CURBIN) | tr . _)`.h
+	echo "extern const u8" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"[];" >> `(echo $(CURBIN) | tr . _)`.h
+	echo "extern const u32" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`_size";" >> `(echo $(CURBIN) | tr . _)`.h
 	picasso -o $(CURBIN) $1
 	bin2s $(CURBIN) | $(AS) -o $*.shbin.o
 endef
@@ -198,7 +198,6 @@ endef
 	@echo $(notdir $<)
 	@$(call shader-as,$(foreach file,$(shell cat $<),$(dir $<)$(file)))
 	
-
 -include $(DEPENDS)
 
 #---------------------------------------------------------------------------------------
